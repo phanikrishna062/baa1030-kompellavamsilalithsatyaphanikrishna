@@ -1,0 +1,246 @@
+---
+title: "UNICEF Adolescent Health Dashboard Report"
+author: 
+  - Kompella Vamsi Lalith Satya Krishna
+format:
+  html:
+    theme: journel
+    toc: true
+    toc-title: "Contents"
+    toc-depth: 2
+    page-layout: full
+    embed-resources: true
+    code-tools: true
+    code-fold: false
+    code-link: true
+    code-summary: "Show Code"
+engine: jupyter
+execute:
+  warning: false
+  message: false
+---
+
+![](figures/UNICEF-logo.png){width="20%" fig-align="left"}
+
+# About This Report
+
+The Tableau version of this report can be found in **[Click here](https://public.tableau.com/app/profile/vamsi.lalith.satya.phani.krishna.kompella/viz/BAA1030_kompellavamsilalithsatyaphanikrishna_Unicefdashboard/Dashboard1)**
+
+# Introduction
+
+This report visualizes key UNICEF adolescent health indicators using cleaned datasets. The focus areas include gender-based health disparities, sanitation correlation, time trends, and country-level rankings.
+
+---
+
+# Is Sanitaion the Missing Link
+
+Imagine growing up without access to clean water, a safe toilet, or good hygiene. This is everyday life for millions of teenagers. This graph demonstrates the strong correlation between teenage health outcomes and access to sanitation, which is something that many of us take for granted. Youth health is frequently better in nations with greater sanitation coverage. It serves as a reminder that good health begins not in the hospital but rather in the home, school, and the fundamental amenities that maintain safe and hygienic communities. By investing in sanitation, we are safeguarding future generations, not just constructing restrooms.
+
+![Sanitation vs Health](figures/scatterplot_linear_reg_line.png){fig-align="center" width="85%"}
+
+
+## Insights from the Graph
+
+::: {.callout-note title="Key Insights on Sanitation and Health"}
+- **Millions of teenagers** still *lack access* to clean water, safe toilets, and proper hygiene every day.
+- There is a **strong correlation** between *adolescent health outcomes* and **sanitation access**.
+- **Greater sanitation coverage** is *frequently associated* with **better youth health** outcomes across nations.
+- **Good health** *begins at home*, in schools, and within *basic community amenities* — *not just in hospitals*.
+- Investing in **sanitation infrastructure** means *safeguarding future generations*, *not merely building restrooms*.
+- **Sanitation** is a *fundamental building block* for *safe, hygienic, and thriving communities*.
+- **Public health improvements** start with *basic needs* like *clean water* and *safe hygiene facilities*.
+:::
+
+### Code
+```{.python}
+from plotnine import *
+import pandas as pd
+
+# Load and prepare merged_df if not already done
+df1 = pd.read_csv('/data/processed/unicef_indicator1_cleaned.csv')
+df2 = pd.read_csv('/data/processed/unicef_indicator2_cleaned.csv')
+df2.rename(columns={"Year": "time_period"}, inplace=True)
+
+df1 = df1[df1["Gender"] == "Total"]
+df2 = df2[df2["Gender"] == "Total"]
+merged_df = df1.merge(df2, on=["Country", "time_period"], suffixes=("_health", "_sanitation"))
+merged_df = merged_df.dropna(subset=["Value_health", "Value_sanitation"])
+
+# Plot using plotnine
+plot = (
+    ggplot(merged_df, aes(x='Value_sanitation', y='Value_health')) +
+    geom_point(alpha=0.6) +
+    geom_smooth(method='lm', color='red') +
+    labs(
+        title='Sanitation Access vs Adolescent Health Score',
+        x='Sanitation Access (%)',
+        y='Adolescent Health Score'
+    ) +
+    theme_minimal() +
+    theme(
+        figure_size=(10, 6),
+        plot_title=element_text(size=14, weight='bold')
+    )
+)
+plot
+```
+
+---
+
+# Health Score Trend – Ireland
+
+The adolescent health score in Ireland has shown a consistent upward trend, reflecting effective national health initiatives. Notably, a steep improvement phase can be seen between 2000 and 2020, followed by a plateau at 4.7–4.8. This flattening could indicate that Ireland has optimized key health parameters. However, the slight dip in the final year suggests emerging challenges, possibly related to mental health or socioeconomic pressures post-pandemic. Continued monitoring and innovative interventions will be key to sustaining progress.
+
+![Health Score Over Time – Ireland](figures/line_chart.png){width=75%}
+
+## Insights from the Graph
+
+::: {.callout-note title="Key Insights on Ireland's Health Score Trend"}
+- The **adolescent health score** in *Ireland* has shown a **consistent upward trend** over the years.
+- A **steep improvement phase** occurred between *2000 and 2020*.
+- The health score **plateaus** around *4.7–4.8*, suggesting **optimization of key health parameters**.
+- A **slight dip** in the final year indicates *emerging challenges*, possibly *mental health* or *socioeconomic pressures* **post-pandemic**.
+- **Ongoing monitoring** and *innovative interventions* are **critical** for sustaining *Ireland’s adolescent health achievements*.
+:::
+
+### Code
+```{.python}
+df_country = df2[(df2["Country"] == "Ireland") & (df2["Gender"] == "Total")].copy()
+df_country = df_country.sort_values(by="time_period")
+
+# Time-series line plot (styled to match dashboard)
+plot = (
+    ggplot(df_country, aes(x='time_period', y='Value')) +
+    geom_line(color='#D62728', size=1.5) +  # red line
+    geom_point(color='black', size=1.5) +
+    geom_text(aes(label='Value'), va='bottom', size=10, format_string='{:.1f}') +
+    labs(
+        title='Adolescent Health Index Over Time – Ireland',
+        x='Year',
+        y='Health Score'
+    ) +
+    theme_minimal() +
+    theme(
+        figure_size=(12, 6),
+        plot_title=element_text(size=14, weight='bold', ha='center'),
+        axis_title=element_text(size=12),
+        axis_text=element_text(size=10),
+        panel_grid_major=element_line(color='gray', linetype='dashed'),
+        panel_background=element_rect(fill='white')
+    )
+)
+
+plot
+```
+
+
+---
+
+# Does Wealth equal Health
+It is simple to believe that young people in affluent nations are inherently healthier. But is that accurate? The relationship between a country's economic power, as indicated by GDP per capita, and the health of its teenagers is examined in this graphic. Although there is a general trend that higher-income nations perform better, the situation isn't flawless. Some wealthy countries still struggle to provide for their young, while some lower-income countries do so admirably. What was the takeaway? Although money is helpful, what really matters is how it is used—for equity, healthcare, and education.
+
+![Top 10 Countries](figures/bar_chart.png){width=75%}
+
+
+## Insights from the Graph
+
+::: {.callout-note title="Key Insights on Wealth and Adolescent Health"}
+- It is **tempting to assume** that **affluent nations** have inherently *healthier youth* — but that is **not always the case**.
+- **Higher-income nations** generally show **better adolescent health outcomes**, but *exceptions exist*.
+- Some **wealthy countries** *still struggle* to ensure *youth well-being*, while **certain lower-income nations** perform **remarkably well**.
+- **Wealth alone is insufficient** — *equitable investment* in *healthcare*, *education*, and *infrastructure* is **what truly matters**.
+- **Effective use of resources** determines adolescent health outcomes *more than sheer economic power*.
+:::
+
+---
+
+### Code
+```{.python}
+selected_countries = ['Luxembourg', 'Switzerland', 'Qatar', 'Singapore', 'United Kingdom', 'India']
+df_filtered = df1[
+    (df1['Gender'] == 'Total') &
+    (df1['Country'].isin(selected_countries))].dropna(subset=['Value'])
+
+df_filtered['Country'] = pd.Categorical(
+    df_filtered['Country'],
+    categories=df_filtered.sort_values(by='Value')['Country'],
+    ordered=True)
+
+plot = (
+    ggplot(df_filtered, aes(x='Country', y='Value', fill='Value')) +
+    geom_col(show_legend=False) +
+    geom_text(aes(label='round(Value, 1)'), nudge_y=3, size=11, format_string='{:.1f}') +
+    labs(
+        title='Adolescent Health Scores – Selected Countries (2016)',
+        x='Country',
+        y='Health Score') +
+    scale_fill_gradient(low="#440154", high="#FDE725", limits=(df_filtered['Value'].min(), df_filtered['Value'].max())) +
+    coord_flip() +
+    theme_minimal() +
+    theme(
+        figure_size=(10, 6),
+        plot_title=element_text(size=14, weight='bold'),
+        axis_title=element_text(size=12),
+        axis_text=element_text(size=10)))
+
+plot
+```
+
+---
+
+# Health of Adolescents Nationwide
+
+Consider being fifteen years old and having your health results dictated by your birth nation. Adolescent health is not spread equitably, as this map demonstrates. Young people are raised in some regions of the world where they have access to clean water, good healthcare, and the support networks they require. It is far more precarious in others. Real teens work behind each colored nation; some are doing well, while others are just attempting to make ends meet. Considering how unequal the starting line is for millions of teenagers worldwide and the implications for their lives, this image challenges us to think about it.
+
+![World Map](figures/world_map.png){width=75%}
+
+## Insights from the Map
+
+::: {.callout-note title="Key Insights on Global Adolescent Health Inequalities"}
+- A **teenager’s health** is often **determined by the country** they are born into.
+- There are **dramatic disparities** in *access to clean water, healthcare, and support systems* across nations.
+- Behind each **colored country** are **real teenagers** — some thriving, others *fighting to survive*.
+- The map **highlights** the *inequity* in **starting conditions** for *millions of adolescents* worldwide.
+- These **health inequalities** create *long-term consequences* for **entire generations**.
+- **Global efforts** must address these *foundational disparities* to ensure **equitable adolescent development**.
+:::
+
+### Code
+```{.python}
+world = gpd.read_file("data/shapefiles/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp")
+
+map_df = df1[df1["Gender"] == "Total"]
+
+world = world.rename(columns={"ADMIN": "Country"})
+merged = world.merge(map_df, on="Country", how="left")
+
+
+fig, ax = plt.subplots(figsize=(18, 10))  
+
+plot = merged.plot(
+    column="Value",
+    cmap="viridis",               
+    linewidth=0.6,                
+    edgecolor="black",            
+    legend=True,
+    ax=ax,
+    missing_kwds={                
+        "color": "lightgrey",
+        "label": "No data"})
+
+ax.set_title("Adolescent Health Indicator by Country (2016)", fontsize=18, fontweight='bold')
+
+ax.axis("off")
+
+colorbar = plot.get_figure().get_axes()[1]
+colorbar.set_ylabel("Health Score", fontsize=20)
+
+plt.tight_layout()
+plt.show()
+```
+
+---
+
+# Conclusion
+
+Through visual exploration of these indicators, this report emphasizes disparities in adolescent well-being — particularly by gender and sanitation access. These findings support data-driven decision-making for adolescent health improvements globally.
